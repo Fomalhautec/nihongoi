@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#6c5ce7">
+<meta name="description" content="日语辞书学习应用：拟声词 + 常用汉字，科学间隔重复 + 趣味小游戏">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>日语辞书记忆 · 拟声词 & 汉字</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="light">
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">オ</span>
+      <div>
+        <div class="title">日语辞书记忆</div>
+        <div class="subtitle" id="topSub">拟声词辞书 · オノマトペ</div>
+      </div>
+    </div>
+    <div class="header-stat" id="headerStat">待复习 0</div>
+  </header>
+
+  <main class="content">
+    <!-- 学习 / 复习 -->
+    <section id="view-learn" class="view active">
+      <div class="hero-card">
+        <div class="hero-title">今日复习</div>
+        <div class="hero-nums">
+          <div><b id="dueCount">0</b><span>待复习</span></div>
+          <div><b id="newCount">0</b><span>新词可用</span></div>
+          <div><b id="learnedCount">0</b><span>已学习</span></div>
+        </div>
+        <button id="startReview" class="btn btn-primary btn-block">开始复习</button>
+        <div class="hint">基于 SM-2 间隔重复算法，记得越牢，复习间隔越长。</div>
+      </div>
+    </section>
+
+    <!-- 复习 / 背词（独立页面） -->
+    <section id="view-review" class="view">
+      <div class="game-head">
+        <span class="gback" id="reviewBack">‹ 返回</span>
+        <span style="font-weight:800">复习中</span>
+        <span class="gstat" id="reviewRemain2"></span>
+      </div>
+      <div id="reviewArea" class="review-area hidden">
+        <div class="review-progress">
+          <div class="bar"><i id="reviewBar"></i></div>
+          <span id="reviewRemain">剩余 0</span>
+        </div>
+        <div class="flashcard" id="flashcard">
+          <div class="fc-front">
+            <div class="fc-tag" id="fcTag">单词</div>
+            <div class="fc-word" id="fcWord">—</div>
+            <div class="fc-romaji" id="fcRomaji">—</div>
+            <button class="btn btn-ghost btn-block" id="showAnswer">显示答案</button>
+          </div>
+          <div class="fc-back hidden" id="fcBack">
+            <div class="fc-backword" id="fcBackWord">—</div>
+            <div class="fc-translation" id="fcTranslation">—</div>
+            <div class="fc-colloc" id="fcColloc"></div>
+            <div class="grade-row">
+              <button class="btn grade g0" data-q="1">不会</button>
+              <button class="btn grade g3" data-q="3">勉强</button>
+              <button class="btn grade g4" data-q="4">还行</button>
+              <button class="btn grade g5" data-q="5">流利</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="reviewDone" class="done-card hidden">
+        <div class="done-emoji">🎉</div>
+        <div class="done-title">本轮复习完成！</div>
+        <div class="done-sub" id="doneSub"></div>
+        <button class="btn btn-primary btn-block" id="doneClose">返回</button>
+      </div>
+    </section>
+
+    <!-- 游戏 -->
+    <section id="view-games" class="view">
+      <h2 class="sec-title">趣味小游戏</h2>
+      <div class="game-grid">
+        <div class="game-card" data-game="match">
+          <div class="game-ico">🃏</div><div class="game-name">配对消消乐</div>
+          <div class="game-desc">点击单词与释义配对消除</div>
+        </div>
+        <div class="game-card" data-game="quiz">
+          <div class="game-ico">⚡</div><div class="game-name">四选一速答</div>
+          <div class="game-desc">看词选义，挑战连击与速度</div>
+        </div>
+        <div class="game-card" data-game="memory">
+          <div class="game-ico">🧠</div><div class="game-name">记忆翻牌</div>
+          <div class="game-desc">翻牌找出词义配对</div>
+        </div>
+        <div class="game-card" data-game="type">
+          <div class="game-ico">⌨️</div><div class="game-name">拼写挑战</div>
+          <div class="game-desc">看释义拼写出罗马音</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 游戏进行中（独立页面） -->
+    <section id="view-gameplay" class="view">
+      <div id="gameArea" class="game-area"></div>
+    </section>
+
+    <!-- 词库 -->
+    <section id="view-dict" class="view">
+      <div class="search-bar">
+        <input id="dictSearch" type="search" placeholder="搜索单词 / 罗马音 / 释义…" autocomplete="off">
+      </div>
+      <div class="chips" id="dictChips">
+        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="new">未学</button>
+        <button class="chip" data-filter="learning">学习中</button>
+        <button class="chip" data-filter="due">待复习</button>
+        <button class="chip" data-filter="mastered">已掌握</button>
+      </div>
+      <div class="dict-banner" id="dictScopeLabel">当前辞书：拟声词（284 词条）</div>
+      <div id="dictList" class="dict-list"></div>
+    </section>
+
+    <!-- 统计 -->
+    <section id="view-stats" class="view">
+      <h2 class="sec-title">学习统计</h2>
+      <div class="stat-grid" id="statGrid"></div>
+      <h3 class="sec-sub">掌握度分布</h3>
+      <div class="mastery" id="masteryBars"></div>
+      <h3 class="sec-sub">最近 7 天复习</h3>
+      <div class="week-bars" id="weekBars"></div>
+      <h3 class="sec-sub">做题表现趋势</h3>
+      <div class="chips" id="perfChips"></div>
+      <div id="perfCharts"></div>
+    </section>
+
+    <!-- 设置 -->
+    <section id="view-settings" class="view">
+      <h2 class="sec-title">设置</h2>
+      <div class="setting-row">
+        <label>当前辞书</label>
+        <div class="dict-switch" id="dictSwitch">
+          <button class="dict-btn active" data-dict="onomato">拟声词辞书</button>
+          <button class="dict-btn" data-dict="kanji">汉字辞书</button>
+        </div>
+      </div>
+      <div class="hint" style="text-align:left;margin:-4px 0 12px;font-size:12px">以下三项参数对两本辞书分别生效，互不影响</div>
+      <div class="setting-row">
+        <label>每日新词上限</label>
+        <input type="range" id="setNewPerDay" min="0" max="50" step="1">
+        <span id="setNewPerDayVal" class="set-val">20</span>
+      </div>
+      <div class="setting-row">
+        <label>配对游戏词数</label>
+        <input type="range" id="setMatch" min="4" max="14" step="2">
+        <span id="setMatchVal" class="set-val">8</span>
+      </div>
+      <div class="setting-row">
+        <label>速答题数</label>
+        <input type="range" id="setQuiz" min="5" max="20" step="1">
+        <span id="setQuizVal" class="set-val">10</span>
+      </div>
+      <div class="setting-row toggle">
+        <label>正反向背词（双向记忆）</label>
+        <input type="checkbox" id="setReverse" class="switch">
+      </div>
+      <div class="setting-row toggle">
+        <label>深色主题</label>
+        <input type="checkbox" id="setDark" class="switch">
+      </div>
+      <div class="setting-row">
+        <label>主题配色</label>
+        <div class="accent-swatches" id="accentSwatches">
+          <button class="swatch" data-color="#6c5ce7" style="--c:#6c5ce7" title="紫"></button>
+          <button class="swatch" data-color="#0984e3" style="--c:#0984e3" title="蓝"></button>
+          <button class="swatch" data-color="#00b894" style="--c:#00b894" title="青绿"></button>
+          <button class="swatch" data-color="#fd79a8" style="--c:#fd79a8" title="粉"></button>
+          <button class="swatch" data-color="#e17055" style="--c:#e17055" title="橙"></button>
+          <button class="swatch" data-color="#e84393" style="--c:#e84393" title="品红"></button>
+        </div>
+      </div>
+      <div class="setting-actions">
+        <button class="btn btn-ghost" id="exportBtn">导出进度</button>
+        <button class="btn btn-ghost" id="importBtn">导入进度</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+      <button class="btn btn-danger btn-block" id="resetBtn">清空所有进度</button>
+      <div class="about">拟声词 284 词 · 常用汉字 2137 字<br>当前辞书：<b id="aboutLine">拟声词</b></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-view="learn"><span>📚</span>学习</button>
+    <button class="tab" data-view="games"><span>🎮</span>游戏</button>
+    <button class="tab" data-view="dict"><span>🔍</span>词库</button>
+    <button class="tab" data-view="stats"><span>📈</span>统计</button>
+    <button class="tab" data-view="settings"><span>⚙️</span>设置</button>
+  </nav>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<div id="confetti" class="confetti"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
